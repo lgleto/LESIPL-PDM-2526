@@ -59,7 +59,12 @@ fun CalculatorView(
             CalculatorBrain.Operation.parse(operation)
 
         )
-        displayText = calculatorBrain.operand.toString()
+
+        if (calculatorBrain.operand % 1 == 0.0 ){
+            displayText = calculatorBrain.operand.toInt().toString()
+        }else{
+            displayText = calculatorBrain.operand.toString()
+        }
 
         userIsTypingNumber = false
     }

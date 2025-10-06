@@ -32,7 +32,9 @@ fun CalculatorButton(
     ) {
         Text(
             label,
-            fontSize = TextUnit(value = 42f, type = TextUnitType.Sp),
+            fontSize = TextUnit(value =
+                if (label.length > 1 ) 20f else 41f,
+                type = TextUnitType.Sp),
         )
     }
 }
@@ -42,7 +44,7 @@ fun CalculatorButton(
 fun CalculatorButtonPreview(){
     CalculatorTheme {
         CalculatorButton(
-            label = "1",
+            label = "AC",
             onClick = {}
         )
     }
