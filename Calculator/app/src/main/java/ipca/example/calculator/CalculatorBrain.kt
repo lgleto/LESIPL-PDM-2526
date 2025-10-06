@@ -43,5 +43,4 @@ class CalculatorBrain {
         operand = result
     }
 
-
 }
