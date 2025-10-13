@@ -20,6 +20,8 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavController
+import androidx.navigation.compose.rememberNavController
 import ipca.example.lastminutenews.models.Article
 import ipca.example.lastminutenews.ui.theme.LastMinuteNewsTheme
 import okhttp3.Call
@@ -29,26 +31,34 @@ import okhttp3.Request
 import okhttp3.Response
 import org.json.JSONObject
 import java.io.IOException
+import java.net.URLEncoder
 
 @Composable
-fun ArticlesListView(modifier: Modifier = Modifier) {
+fun ArticlesListView(
+    modifier: Modifier = Modifier,
+    navController: NavController,
+    source : String
+    ) {
 
     val viewModel : ArticlesListViewModel = viewModel()
     val uiState by viewModel.uiState
 
     ArticlesListViewContent(
         modifier = modifier,
-        uiState = uiState)
+        uiState = uiState,
+        navController = navController
+    )
 
     LaunchedEffect(Unit) {
-        viewModel.loadArticles()
+        viewModel.loadArticles(source)
     }
 }
 
 @Composable
 fun ArticlesListViewContent(
     modifier: Modifier = Modifier,
-    uiState: ArticlesListState
+    uiState: ArticlesListState,
+    navController: NavController
 ) {
     Box(
         modifier = modifier.fillMaxSize(),
@@ -70,11 +80,18 @@ fun ArticlesListViewContent(
                 itemsIndexed(
                     items = uiState.articles
                 ) { index, item ->
-                    ArticleViewCell(article = item)
+                    ArticleViewCell( article = item){
+                            navController
+                                .navigate("details/${item.title}/${item.url?.encodeURL()}")
+                        }
                 }
             }
         }
     }
+}
+
+fun String.encodeURL() : String {
+    return URLEncoder.encode(this, "UTF-8")
 }
 
 @Preview(showBackground = true)
@@ -82,6 +99,7 @@ fun ArticlesListViewContent(
 fun ArticlesListViewPreview() {
     LastMinuteNewsTheme {
         ArticlesListViewContent(
+            navController = rememberNavController(),
             uiState = ArticlesListState(
                 isLoading = true,
                 error = "No internet connection!",
