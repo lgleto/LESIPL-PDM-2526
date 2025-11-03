@@ -1,29 +1,28 @@
-package ipca.example.shoppinglist;
+package ipca.example.shoppinglist.ui.carts
 
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import com.google.firebase.Firebase
-import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.auth
 import com.google.firebase.firestore.firestore
+import ipca.example.shoppinglist.models.Cart
 
 
-data class HomeState(
-    var products: List<Product> = emptyList(),
+data class CartsState(
+    var carts: List<Cart> = emptyList(),
     var error: String? = null,
     var isLoading: Boolean? = null
 )
-public class HomeViewModel : ViewModel() {
+public class CartsViewModel : ViewModel() {
 
-    var uiState = mutableStateOf(HomeState())
+    var uiState = mutableStateOf(CartsState())
         private set
 
     val db = Firebase.firestore
-    fun fetchProducts() {
+    fun fetchCarts() {
         uiState.value = uiState.value.copy(isLoading = true)
-
-
-        db.collection("products")
+        db.collection("carts")
+            .whereArrayContains("owners", Firebase.auth.currentUser?.uid!!)
             .addSnapshotListener { result, error ->
                 if (error != null) {
                     uiState.value = uiState.value.copy(
@@ -33,19 +32,17 @@ public class HomeViewModel : ViewModel() {
                     return@addSnapshotListener
                 }
 
-                var products = mutableListOf<Product>()
+                var carts = mutableListOf<Cart>()
                 for (document in result?.documents?:emptyList()) {
-                    var product = document.toObject(Product::class.java)
-                    product?.docId = document.id
-                    //product.name = document.data["name"].toString()
-                    //product.qtd = document.data["qtd"].toString().toDouble()
-                    product?.let {
-                        products.add(product)
+                    var cart = document.toObject(Cart::class.java)
+                    cart?.docId = document.id
+                    cart?.let {
+                        carts.add(cart)
                     }
 
                 }
                 uiState.value = uiState.value.copy(
-                    products = products,
+                    carts = carts,
                     error = null,
                     isLoading = false
                 )
@@ -53,10 +50,16 @@ public class HomeViewModel : ViewModel() {
 
     }
 
-    fun checkProduct(docId: String, isChecked: Boolean) {
-        db.collection("products")
-            .document(docId)
-            .update(mapOf("checked" to isChecked))
+    fun addCart(){
+
+        val uid = Firebase.auth.currentUser?.uid!!
+
+        uiState.value = uiState.value.copy(isLoading = true)
+        db.collection("carts")
+            .add(Cart(name = "New Cart ${
+                uiState.value.carts.size + 1
+            }",
+                owners = listOf(uid)))
     }
 
 

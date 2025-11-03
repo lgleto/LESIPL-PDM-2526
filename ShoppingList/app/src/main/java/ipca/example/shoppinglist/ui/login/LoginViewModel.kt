@@ -1,4 +1,4 @@
-package ipca.example.shoppinglist;
+package ipca.example.shoppinglist.ui.login
 
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
