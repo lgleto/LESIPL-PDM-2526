@@ -13,9 +13,11 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -24,6 +26,7 @@ import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import ipca.example.lastminutenews.models.Article
 import ipca.example.lastminutenews.ui.theme.LastMinuteNewsTheme
+import kotlinx.coroutines.launch
 import okhttp3.Call
 import okhttp3.Callback
 import okhttp3.OkHttpClient
@@ -34,34 +37,32 @@ import java.io.IOException
 import java.net.URLEncoder
 
 @Composable
-fun ArticlesListView(
+fun ArticlesDatabaseView(
     modifier: Modifier = Modifier,
-    navController: NavController,
-    source : String,
-    onItemClick: (Article) -> Unit = {}
+    navController: NavController
     ) {
 
-    val viewModel : ArticlesListViewModel = viewModel()
+    val viewModel : ArticlesDatabaseViewModel = viewModel()
     val uiState by viewModel.uiState
+    val context = LocalContext.current
 
-    ArticlesListViewContent(
+
+    ArticlesDatabaseViewContent(
         modifier = modifier,
         uiState = uiState,
         navController = navController,
-        onItemClick = onItemClick
     )
 
     LaunchedEffect(Unit) {
-        viewModel.loadArticles(source)
+        viewModel.loadArticles(context)
     }
 }
 
 @Composable
-fun ArticlesListViewContent(
+fun ArticlesDatabaseViewContent(
     modifier: Modifier = Modifier,
-    uiState: ArticlesListState,
-    navController: NavController,
-    onItemClick: (Article) -> Unit = {}
+    uiState: ArticlesDatabaseState,
+    navController: NavController
 ) {
     Box(
         modifier = modifier.fillMaxSize(),
@@ -84,7 +85,6 @@ fun ArticlesListViewContent(
                     items = uiState.articles
                 ) { index, item ->
                     ArticleViewCell( article = item){
-                            onItemClick(item)
                             navController
                                 .navigate("details/${item.title}/${item.url?.encodeURL()}")
                         }
@@ -94,17 +94,15 @@ fun ArticlesListViewContent(
     }
 }
 
-fun String.encodeURL() : String {
-    return URLEncoder.encode(this, "UTF-8")
-}
+
 
 @Preview(showBackground = true)
 @Composable
-fun ArticlesListViewPreview() {
+fun ArticlesDatabaseViewPreview() {
     LastMinuteNewsTheme {
-        ArticlesListViewContent(
+        ArticlesDatabaseViewContent(
             navController = rememberNavController(),
-            uiState = ArticlesListState(
+            uiState = ArticlesDatabaseState(
                 isLoading = true,
                 error = "No internet connection!",
                 articles = listOf(

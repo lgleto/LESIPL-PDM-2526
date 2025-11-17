@@ -3,6 +3,7 @@ package ipca.example.lastminutenews.ui.components
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Build
 import androidx.compose.material.icons.filled.Face
+import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material3.BottomAppBar
 import androidx.compose.material3.Icon
@@ -70,6 +71,22 @@ fun MyBottomBar(
             },
             label = {
                 Text("ESPN")
+            }
+        )
+        NavigationBarItem(
+            selected = index == 2,
+            onClick = {
+                index = 2
+                navController.navigate("favorites")
+            },
+            icon = {
+                Icon(
+                    imageVector = Icons.Filled.Favorite,
+                    contentDescription = "Favorites"
+                )
+            },
+            label = {
+                Text("Favorites")
             }
         )
     }
