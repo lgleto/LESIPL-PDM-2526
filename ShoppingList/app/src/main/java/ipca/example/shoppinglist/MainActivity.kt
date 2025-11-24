@@ -14,6 +14,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.google.firebase.Firebase
 import com.google.firebase.auth.auth
+import dagger.hilt.android.AndroidEntryPoint
 import ipca.example.shoppinglist.ui.carts.CartsView
 
 import ipca.example.shoppinglist.ui.login.LoginView
@@ -21,7 +22,9 @@ import ipca.example.shoppinglist.ui.product.ProductsView
 import ipca.example.shoppinglist.ui.products.ProductDetailView
 import ipca.example.shoppinglist.ui.theme.ShoppingListTheme
 
+@AndroidEntryPoint
 class MainActivity : ComponentActivity() {
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()

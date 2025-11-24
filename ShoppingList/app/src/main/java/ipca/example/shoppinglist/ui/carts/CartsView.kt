@@ -19,6 +19,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
@@ -30,7 +31,7 @@ fun CartsView(
     modifier: Modifier = Modifier
 )  {
 
-    val viewModel : CartsViewModel = viewModel()
+    val viewModel : CartsViewModel = hiltViewModel()
     val uiState by viewModel.uiState
     LaunchedEffect(Unit) {
         viewModel.fetchCarts()

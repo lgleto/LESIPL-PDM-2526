@@ -2,10 +2,17 @@ package ipca.example.shoppinglist.ui.carts
 
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import com.google.firebase.Firebase
 import com.google.firebase.auth.auth
 import com.google.firebase.firestore.firestore
+import dagger.hilt.android.lifecycle.HiltViewModel
 import ipca.example.shoppinglist.models.Cart
+import ipca.example.shoppinglist.repositories.CartRepository
+import ipca.example.shoppinglist.repositories.ResultWrapper
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
+import javax.inject.Inject
 
 
 data class CartsState(
@@ -13,53 +20,74 @@ data class CartsState(
     var error: String? = null,
     var isLoading: Boolean? = null
 )
-public class CartsViewModel : ViewModel() {
+
+@HiltViewModel
+class CartsViewModel @Inject constructor(
+    val cartRepository: CartRepository
+)
+    : ViewModel() {
 
     var uiState = mutableStateOf(CartsState())
         private set
 
     val db = Firebase.firestore
     fun fetchCarts() {
-        uiState.value = uiState.value.copy(isLoading = true)
-        db.collection("carts")
-            .whereArrayContains("owners", Firebase.auth.currentUser?.uid!!)
-            .addSnapshotListener { result, error ->
-                if (error != null) {
+        cartRepository.fetchCarts().onEach {result ->
+            when(result){
+                is ResultWrapper.Success -> {
                     uiState.value = uiState.value.copy(
-                        error = error.message,
+                        carts = result.data?: emptyList(),
+                        error = null,
                         isLoading = false
                     )
-                    return@addSnapshotListener
                 }
-
-                var carts = mutableListOf<Cart>()
-                for (document in result?.documents?:emptyList()) {
-                    var cart = document.toObject(Cart::class.java)
-                    cart?.docId = document.id
-                    cart?.let {
-                        carts.add(cart)
-                    }
-
+                is ResultWrapper.Loading -> {
+                    uiState.value = uiState.value.copy(
+                        isLoading = true
+                    )
                 }
-                uiState.value = uiState.value.copy(
-                    carts = carts,
-                    error = null,
-                    isLoading = false
-                )
+                is ResultWrapper.Error -> {
+                    uiState.value = uiState.value.copy(
+                        error = result.message,
+                        isLoading = false
+                    )
+                }
             }
+        }.launchIn(viewModelScope)
+
 
     }
 
     fun addCart(){
 
         val uid = Firebase.auth.currentUser?.uid!!
+        val cart = Cart(name = "New Cart ${
+            uiState.value.carts.size + 1
+        }",owners = listOf(uid))
 
-        uiState.value = uiState.value.copy(isLoading = true)
-        db.collection("carts")
-            .add(Cart(name = "New Cart ${
-                uiState.value.carts.size + 1
-            }",
-                owners = listOf(uid)))
+        cartRepository.addCart(cart).onEach { result->
+            when(result){
+                is ResultWrapper.Success -> {
+                    uiState.value = uiState.value.copy(
+                        error = null,
+                        isLoading = false
+                    )
+                }
+                is ResultWrapper.Loading -> {
+                    uiState.value = uiState.value.copy(
+                        isLoading = true
+                    )
+                }
+                is ResultWrapper.Error -> {
+                    uiState.value = uiState.value.copy(
+                        error = result.message,
+                        isLoading = false
+                    )
+                }
+            }
+        }.launchIn(viewModelScope)
+
+
     }
 
 

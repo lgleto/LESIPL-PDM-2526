@@ -1,6 +1,7 @@
 package ipca.example.shoppinglist.repositories
 
 import com.google.firebase.Firebase
+import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.auth
 import com.google.firebase.firestore.FirebaseFirestore
 import ipca.example.shoppinglist.models.Cart
@@ -11,43 +12,32 @@ import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
 
-class CartRepository @Inject constructor(
+class LoginRepository @Inject constructor(
+    private val auth: FirebaseAuth,
     private val db: FirebaseFirestore
 ) {
 
-    fun fetchCarts() : Flow<ResultWrapper<List<Cart>>> = flow{
+    fun login(username : String, password : String) : Flow<ResultWrapper<Unit>> = flow{
         try {
             emit(ResultWrapper.Loading())
-            db.collection("carts")
-                .whereArrayContains("owners", Firebase.auth.currentUser?.uid!!)
-                .snapshotFlow()
-                .collect { result ->
-                    var carts = mutableListOf<Cart>()
-                    for (document in result?.documents ?: emptyList()) {
-                        var cart = document.toObject(Cart::class.java)
-                        cart?.docId = document.id
-                        cart?.let {
-                            carts.add(cart)
-                        }
-
-                    }
-                    emit(ResultWrapper.Success(carts.toList()))
-                }
-
-        }catch (e:Exception) {
-            emit(ResultWrapper.Error(e.message?:""))
-        }
-    }.flowOn(Dispatchers.IO)
-
-    fun addCart(cart:Cart) : Flow<ResultWrapper<Unit>> = flow{
-        try {
-            emit(ResultWrapper.Loading())
-            db.collection("carts")
-                .add(cart)
+            val result = auth.signInWithEmailAndPassword(
+                username,
+                password)
                 .await()
+
+            result.user?.email?.let {
+                db.collection("users")
+                    .document(result.user!!.uid)
+                    .set(mapOf("email" to it))
+                    .await()
+            }
+
             emit(ResultWrapper.Success(Unit))
+
         }catch (e:Exception) {
             emit(ResultWrapper.Error(e.message?:""))
         }
     }.flowOn(Dispatchers.IO)
+
+
 }

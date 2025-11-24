@@ -1,4 +1,7 @@
 package ipca.example.shoppinglist
 
-class ShoppingListApp {
-}
+import android.app.Application
+import dagger.hilt.android.HiltAndroidApp
+
+@HiltAndroidApp
+class ShoppingListApp : Application()

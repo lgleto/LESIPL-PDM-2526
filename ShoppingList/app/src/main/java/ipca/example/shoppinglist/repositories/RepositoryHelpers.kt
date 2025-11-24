@@ -1,4 +1,4 @@
-package ipca.example.shoppinglist.repository
+package ipca.example.shoppinglist.repositories
 
 import com.google.firebase.firestore.DocumentReference
 import com.google.firebase.firestore.DocumentSnapshot

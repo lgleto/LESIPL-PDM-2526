@@ -2,9 +2,17 @@ package ipca.example.shoppinglist.ui.login
 
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import com.google.firebase.Firebase
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.auth
+import dagger.hilt.android.lifecycle.HiltViewModel
+import ipca.example.shoppinglist.repositories.CartRepository
+import ipca.example.shoppinglist.repositories.LoginRepository
+import ipca.example.shoppinglist.repositories.ResultWrapper
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
+import javax.inject.Inject
 
 
 data class LoginState(
@@ -13,7 +21,10 @@ data class LoginState(
     var error: String? = null,
     var isLoading: Boolean? = null
 )
-public class LoginViewModel : ViewModel() {
+@HiltViewModel
+class LoginViewModel @Inject constructor(
+    val loginRepository: LoginRepository
+): ViewModel() {
 
     var uiState = mutableStateOf(LoginState())
         private set
@@ -44,29 +55,32 @@ public class LoginViewModel : ViewModel() {
         }
         // do login
 
-        var auth: FirebaseAuth
-        auth = Firebase.auth
-
-        auth.signInWithEmailAndPassword(
+        loginRepository.login(
             uiState.value.username!!,
-            uiState.value.password!!)
-            .addOnCompleteListener { task ->
-                if (task.isSuccessful) {
-                    // Sign in success, update UI with the signed-in user's information
+            uiState.value.password!!
+        ).onEach {result ->
+            when(result){
+                is ResultWrapper.Success -> {
+                    onLoginSuccess()
                     uiState.value = uiState.value.copy(
                         error = null,
                         isLoading = false
                     )
-                    onLoginSuccess()
-                } else {
-                    // If sign in fails, display a message to the user.
-
+                }
+                is ResultWrapper.Loading -> {
                     uiState.value = uiState.value.copy(
-                        error = task.exception?.message,
+                        isLoading = true
+                    )
+                }
+                is ResultWrapper.Error -> {
+                    uiState.value = uiState.value.copy(
+                        error = result.message,
                         isLoading = false
                     )
                 }
             }
+        }.launchIn(viewModelScope)
+
 
     }
 
